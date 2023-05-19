@@ -9,7 +9,7 @@ Implementation of [Active Region Detection in Multi-spectral Solar Images](https
 
 
 **Full version (multi layer multi tasking object detection and segmentation based on multi-spectral (multi-layer) solar images)
-[MSMT-CNN for Solar Active Region Detection with Multi-Spectral Analysis](https://doi.org/10.1007/s42979-022-01088-y)**
+[MLMT-CNN - Object Detection and Segmentation in Multi-layer and Multi-spectral images](https://doi.org/10.1007/s00138-021-01261-y)**
 
 
 
