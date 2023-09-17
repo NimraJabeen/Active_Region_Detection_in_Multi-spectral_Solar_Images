@@ -22,10 +22,15 @@ import keras
 
 
 def get_session(gpu_fraction):
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction,
-                                allow_growth=True)
-    return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            print(e)
 
 def select_Pos_Neg_Sample(cfg, pos_samples, neg_samples):
     if cfg.num_rois > 1:
@@ -95,18 +100,19 @@ def train_kitti():
     train_imgs = [s for s in all_images if s['imageset'] == 'train']
     print('Num train samples for one spectrum is {}'.format(len(train_imgs)))
 
-
-
     data_gen_train = MLMT_data_generators.get_anchor_gt(train_imgs, classes_count, cfg, nn.get_img_output_length,
-                                                        K.image_dim_ordering(), images_dir = training_images_dir, spect_1_name = spect_1, spect_2_name = spect_2, mode='train')
+                                                        K.image_data_format(), images_dir = training_images_dir, spect_1_name = spect_1, spect_2_name = spect_2, mode='train')
 
-
-    if K.image_dim_ordering() == 'th':
+    if K.image_data_format() == 'channels_first':
         input_shape_img = (3, None, None)
     else:
         input_shape_img = (None, None, 3)
+    
+    #print(input_shape_img)
 
     input_img_1, input_img_2 = Input(shape=input_shape_img), Input(shape=input_shape_img)
+
+    #print(input_img_1)
     
     roi_input_1 = Input(shape=(None, 4))
     roi_input_2 = Input(shape=(None, 4))
@@ -129,8 +135,8 @@ def train_kitti():
         model_rpn = load_nested_imagenet(model_rpn)
 
 
-    optimizer_rpn = Adam(lr=2e-5)
-    optimizer_classifier = Adam(lr=2e-5)
+    optimizer_rpn = Adam(learning_rate=2e-5)
+    optimizer_classifier = Adam(learning_rate=2e-5)
 
     model_rpn.compile(optimizer=optimizer_rpn,
                         loss=[losses_fn.rpn_loss_cls(num_anchors), losses_fn.rpn_loss_regr(num_anchors),
@@ -186,14 +192,19 @@ def train_kitti():
 
                 X_1, X_2, Y, img_data = next(data_gen_train)
 
+                #print(img_data)
+                #print(X_1.shape)
+                #print(X_2.shape)
+
+
                 loss_rpn = model_rpn.train_on_batch([X_1, X_2], Y)
 
                 P_rpn = model_rpn.predict_on_batch([X_1, X_2])
 
-                result_1 = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], cfg, K.image_dim_ordering(), use_regr=True,
+                result_1 = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], cfg, K.image_data_format(), use_regr=True,
                                                   overlap_thresh = RPN_overlap_thresh,
                                                   max_boxes = RPN_max_Bbox)
-                result_2 = roi_helpers.rpn_to_roi(P_rpn[2], P_rpn[3], cfg, K.image_dim_ordering(), use_regr=True,
+                result_2 = roi_helpers.rpn_to_roi(P_rpn[2], P_rpn[3], cfg, K.image_data_format(), use_regr=True,
                                                   overlap_thresh = RPN_overlap_thresh,
                                                   max_boxes = RPN_max_Bbox)
 

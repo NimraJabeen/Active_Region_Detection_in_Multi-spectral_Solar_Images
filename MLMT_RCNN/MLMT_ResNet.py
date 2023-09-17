@@ -53,7 +53,8 @@ def load_nested_imagenet(model):
 def identity_block(input_tensor, kernel_size, filters, stage, block, ResBranch, trainable=True):
     nb_filter1, nb_filter2, nb_filter3 = filters
 
-    if K.image_dim_ordering() == 'tf':
+    #if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
         bn_axis = 3
     else:
         bn_axis = 1
@@ -61,6 +62,9 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, ResBranch, 
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
+    #print(input_tensor)
+    #KerasTensor(type_spec=TensorSpec(shape=(None, None, None, 256), dtype=tf.float32, name=None), name='activation_3/Relu:0', description="created by layer 'activation_3'")
+     
     x = Convolution2D(nb_filter1, (1, 1), name=conv_name_base + '2a' + '_resBranch_' + ResBranch, trainable=trainable)(
         input_tensor)
     x = FixedBatchNormalization(axis=bn_axis, name=bn_name_base + '2a' + '_resBranch_' + ResBranch)(x)
@@ -84,13 +88,16 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, ResBranch, 
 def identity_block_td(input_tensor, kernel_size, filters, stage, block, ResBranch, trainable=True):
 
     nb_filter1, nb_filter2, nb_filter3 = filters
-    if K.image_dim_ordering() == 'tf':
+    #if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
         bn_axis = 3
     else:
         bn_axis = 1
 
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
+
+    #print(input_tensor)
 
     x = TimeDistributed(Convolution2D(nb_filter1, (1, 1), trainable=trainable, kernel_initializer='normal'),
                         name=conv_name_base + '2a' + '_resBranch_' + ResBranch)(input_tensor)
@@ -115,7 +122,8 @@ def identity_block_td(input_tensor, kernel_size, filters, stage, block, ResBranc
 
 def conv_block(input_tensor, kernel_size, filters, stage, block, ResBranch, strides=(2, 2), trainable=True):
     nb_filter1, nb_filter2, nb_filter3 = filters
-    if K.image_dim_ordering() == 'tf':
+    #if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
         bn_axis = 3
     else:
         bn_axis = 1
@@ -123,6 +131,8 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, ResBranch, stri
 
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
+
+    #print(input_tensor)
 
     x = Convolution2D(nb_filter1, (1, 1), strides=strides, name=conv_name_base + '2a' + '_resBranch_' + ResBranch,
                       trainable=trainable)(
@@ -154,7 +164,8 @@ def conv_block_td(input_tensor, kernel_size, filters, stage, block, ResBranch, i
                   trainable=True):
 
     nb_filter1, nb_filter2, nb_filter3 = filters
-    if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
+    #if K.image_dim_ordering() == 'tf':
         bn_axis = 3
     else:
         bn_axis = 1
@@ -195,7 +206,8 @@ def conv_block_td(input_tensor, kernel_size, filters, stage, block, ResBranch, i
 
 def mlmt_base_nn(input_tensor_1 = None, input_tensor_2 = None, trainable=False):
 
-    if K.image_dim_ordering() == 'th':
+    #if K.image_dim_ordering() == 'th':
+    if K.image_data_format() == 'channels_first':
         input_shape = (3, None, None)
     else:
         input_shape = (None, None, 3)
@@ -218,7 +230,9 @@ def mlmt_base_nn(input_tensor_1 = None, input_tensor_2 = None, trainable=False):
             img_input_2 = input_tensor_2
 
 
-    if K.image_dim_ordering() == 'tf':
+    #if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
+
         bn_axis = 3
     else:
         bn_axis = 1

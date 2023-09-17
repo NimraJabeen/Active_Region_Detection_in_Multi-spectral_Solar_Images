@@ -5,13 +5,18 @@ import sys
 import pickle
 from optparse import OptionParser
 import time
-from keras_frcnn import config
-import keras_frcnn.resnet_mulBranch_2spects_TIF_dim_reduction_UniqueRoIPool as nn
+#from keras_frcnn import config
+from MLMT_RCNN import config
+#import keras_frcnn.resnet_mulBranch_2spects_TIF_dim_reduction_UniqueRoIPool as nn
+from MLMT_RCNN import MLMT_ResNet as nn
 from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
-from keras_frcnn import roi_helpers
-from keras_frcnn import MLMT_data_generators
+#from keras_frcnn import roi_helpers
+import MLMT_RCNN.roi_helpers as roi_helpers
+#from keras_frcnn import MLMT_data_generators
+from MLMT_RCNN import MLMT_data_generators
+from MLMT_RCNN.MLMT_simple_parser import get_data
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc
@@ -232,8 +237,11 @@ sys.setrecursionlimit(40000)
 
 parser = OptionParser()
 
-parser.add_option("-p", "--path_1", dest="test_path_1", default ='F:/Data/label_testing_195.txt' , help="Path to test data 1.")
-parser.add_option("-q", "--path_2", dest="test_path_2", default ='F:/Data/label_testing_304.txt' , help="Path to test data 2.")
+
+parser.add_option("-p", "--path_1", dest="test_path_1", default ='E:/Solar/UAD/labels/my_datasimple_label_testing_TIFF_195.txt' , help="Path to test data 1.")
+parser.add_option("-q", "--path_2", dest="test_path_2", default ='E:/Solar/UAD/labels/my_datasimple_label_testing_TIFF_171.txt' , help="Path to test data 2.")
+#parser.add_option("-p", "--path_1", dest="test_path_1", default ='F:/Data/label_testing_195.txt' , help="Path to test data 1.")
+#parser.add_option("-q", "--path_2", dest="test_path_2", default ='F:/Data/label_testing_304.txt' , help="Path to test data 2.")
 parser.add_option("-n", "--num_rois", dest="num_rois",
                   help="Number of ROIs per iteration. Higher means more memory use.", default=32)
 parser.add_option("--config_filename", dest="config_filename", default ="config.pickle", help=
@@ -251,7 +259,7 @@ if not options.test_path_1:
 if options.parser == 'pascal_voc':
     from keras_frcnn.pascal_voc_parser import get_data_for_mAP
 elif options.parser == 'simple':
-    from keras_frcnn.MLMT_simple_parser import get_data
+    from MLMT_RCNN.MLMT_simple_parser import get_data
 else:
     raise ValueError("Command line option parser must be one of 'pascal_voc' or 'simple'")
 
@@ -319,7 +327,7 @@ class_mapping = {v: k for k, v in class_mapping.items()}
 print(class_mapping)
 class_to_color = {class_mapping[v]: np.random.randint(0, 255, 3) for v in class_mapping}
 
-if K.image_dim_ordering() == 'th':
+if K.image_data_format() == 'channels_first':
     input_shape_img = (3, None, None)
     input_shape_features = (1024, None, None)
 else:
@@ -333,7 +341,7 @@ roi_input_2 = Input(shape=(None, 4))
 feature_map_input_1 = Input(shape=input_shape_features)
 feature_map_input_2 = Input(shape=input_shape_features)
 
-shared_layers_merged, shared_layers_x1, shared_layers_x2  = nn.nn_base_res_weights_2spectIII(input_img_1, input_img_2, trainable=True)
+shared_layers_merged, shared_layers_x1, shared_layers_x2  =nn.mlmt_base_nn(input_img_1, input_img_2, trainable=True)
 
 num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios)
 
@@ -345,8 +353,12 @@ model_rpn = Model([input_img_1, input_img_2], rpn_layers)
 model_classifier_only = Model([feature_map_input_1, feature_map_input_2, roi_input_1, roi_input_2], classifier)
 model_classifier = Model([feature_map_input_1, feature_map_input_2, roi_input_1, roi_input_2], classifier)
 
-RPN_model_path = './model/Exp 195+304 - for paper use/' + '1437_RPN.h5'
-DET_model_path = './model/Exp 195+304 - for paper use/' + '1649_DET.h5'
+
+RPN_model_path = './model/195-and-171/' + '1437_RPN.h5'
+DET_model_path = './model/195-and-171/' + '1649_DET.h5'
+
+#RPN_model_path = './model/Exp 195+304 - for paper use/' + '1437_RPN.h5'
+#DET_model_path = './model/Exp 195+304 - for paper use/' + '1649_DET.h5'
 
 print('Loading RPN weights from {}'.format(RPN_model_path))
 print('Loading DET weights from {}'.format(DET_model_path))
@@ -358,9 +370,12 @@ model_classifier_only.load_weights(DET_model_path, by_name=True)
 model_rpn.compile(optimizer='sgd', loss='mse')
 model_classifier.compile(optimizer='sgd', loss='mse')
 
-test_images_dir = 'F:/Deep_projects/MulSpect IMG Cls/Arch_two/Data/testing_images'
+test_images_dir='E:/Solar/UAD/testing_images'
+
+#test_images_dir = 'F:/Deep_projects/MulSpect IMG Cls/Arch_two/Data/testing_images'
 spect_1 = "195"
-spect_2 = "304"
+spect_2 = "171"
+#spect_2 = "304"
 
 all_images,  _, _  = get_data(options.test_path_1,
                               options.test_path_2,
@@ -420,8 +435,9 @@ for idx, img_data in enumerate(test_imgs):
     X_1, fx_1, fy_1 = format_img(img_Spect_1, C)
     _, ratio = format_img_size(img_Spect_2, C)
     X_2, fx_2, fy_2 = format_img(img_Spect_2, C)
-
-    if K.image_dim_ordering() == 'tf':
+    
+    if K.image_data_format()  == 'channels_last':
+    #if K.image_dim_ordering() == 'tf':
         X_1 = np.transpose(X_1, (0, 2, 3, 1))
         X_2 = np.transpose(X_2, (0, 2, 3, 1))
 
@@ -430,9 +446,9 @@ for idx, img_data in enumerate(test_imgs):
 
     [Y1_1, Y2_1, Y1_2, Y2_2, F1, F2] = model_rpn.predict([X_1, X_2])    
 
-    result_1 = roi_helpers.rpn_to_roi(Y1_1, Y2_1, C, K.image_dim_ordering(), overlap_thresh=1,
+    result_1 = roi_helpers.rpn_to_roi(Y1_1, Y2_1, C, K.image_data_format(), overlap_thresh=1,
                                     max_boxes=150)
-    result_2 = roi_helpers.rpn_to_roi(Y1_2, Y2_2, C, K.image_dim_ordering(), overlap_thresh=1,
+    result_2 = roi_helpers.rpn_to_roi(Y1_2, Y2_2, C, K.K.image_data_format(), overlap_thresh=1,
                                           max_boxes=150)
 
 

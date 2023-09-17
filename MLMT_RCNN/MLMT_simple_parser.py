@@ -5,7 +5,11 @@ from PIL import Image
 
     
 def get_imlist_starting_with(path, starting_str):
+  #print(path)
+  #print([os.path.join(path, f) for f in os.listdir("." + path) if f.startswith(starting_str)])
+  #return [os.path.join(path, f) for f in os.listdir("." + path) if f.startswith(starting_str)]
   return [os.path.join(path, f) for f in os.listdir(path) if f.startswith(starting_str)]
+  
 
 
 def parse_label_file(input_path, spect, data_mode, main_flag = False):
@@ -19,7 +23,7 @@ def parse_label_file(input_path, spect, data_mode, main_flag = False):
         print('Parsing annotation file ', spect)
 
         for line in f:
-            line_split = line.strip().split(',')
+            line_split = line.strip().split(',')            
             (filename, x1, y1, x2, y2, class_name) = line_split
 
             if class_name not in classes_count:
@@ -34,9 +38,12 @@ def parse_label_file(input_path, spect, data_mode, main_flag = False):
                     found_bg = True
 
                 class_mapping[class_name] = len(class_mapping)
+            #print(os.getcwd())
 
             if filename not in all_imgs:
                 all_imgs[filename] = {}
+
+                #print(filename)
 
                 img = Image.open(filename)
                 img = np.array(img)
@@ -84,7 +91,7 @@ def get_data(input_path_1, input_path_2,
              images_dir,
              spect_1, spect_2,
              data_set):
-
+    #print(input_path_1, images_dir, spect_1, data_set, flush= True)
     all_images_1, found_bg, classes_count, class_mapping = parse_label_file(input_path_1, spect_1, data_mode = data_set, main_flag = True)
     all_images_2, _, _, _ = parse_label_file(input_path_2, spect_2, data_mode = data_set)
 
@@ -93,8 +100,16 @@ def get_data(input_path_1, input_path_2,
 
         image_ID = filename_1.split('/')[-1].split('_')[0]
 
+        
+
+        #print(images_dir)
+
         spect_dir_2 = images_dir + '/' + spect_2 + '/'
+        #print(spect_dir_2)
+        #print(image_ID)
         filename_2 = get_imlist_starting_with(spect_dir_2, image_ID)[0]
+        
+        print(filename_1, filename_2)
 
         all_images_1[filename_1]['bboxes_2'] = all_images_2[filename_2]['bboxes']
 

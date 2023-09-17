@@ -335,7 +335,7 @@ def get_anchor_gt(all_img_data, class_count, C, img_length_calc_function, backen
                         y_rpn_regr_2[:, y_rpn_regr_2.shape[1]//2:, :, :] *= C.std_scaling
 
 
-                        if backend == 'tf':
+                        if backend == 'channels_last':
                                 spect_1_img = np.transpose(spect_1_img, (0, 2, 3, 1))
                                 spect_2_img = np.transpose(spect_2_img, (0, 2, 3, 1))
 

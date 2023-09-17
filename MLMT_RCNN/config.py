@@ -1,6 +1,6 @@
 from keras import backend as K
 
-
+#new changes
 class Config:
     def __init__(self):
 
@@ -12,13 +12,21 @@ class Config:
 
         self.saving_path = './model/'
 
-        self.spect_1 = '195'
+        self.spect_1 = '284'
         self.spect_2 = '171'
+        #for the local put image folder in same directory as active region but for cluster put it inside the active refion"
+        self.training_images_dir ='images'
+        #self.simple_label_file_A= '/baie/nfs-cluster-1/mundus/njabeen332/Solar/UAD/labels/my_datasimple_label_TIFF_284-fixed_aug.txt'
+        #self.simple_label_file_B= '/baie/nfs-cluster-1/mundus/njabeen332/Solar/UAD/labels/my_datasimple_label_TIFF_171-fixed_aug.txt'
+        self.simple_label_file_A= '/baie/nfs-cluster-1/mundus/njabeen332/Solar_GPU/UAD/labels/my_datasimple_label_TIFF_284-fixed_aug.txt'
+        self.simple_label_file_B= '/baie/nfs-cluster-1/mundus/njabeen332/Solar_GPU/UAD/labels/my_datasimple_label_TIFF_171-fixed_aug.txt'
 
-        self.training_images_dir = 'F:/Data/train/images'
+        
 
-        self.simple_label_file_A = 'F:/Data/train/labels/label_195.txt'
-        self.simple_label_file_B = 'F:/Data/train/labels/label_171.txt'
+        
+        #self.training_images_dir = 'E:/Data/train/images'
+        #self.simple_label_file_A = 'E:/Data/train/labels/label_195.txt'
+        #self.simple_label_file_B = 'E:/Data/train/labels/label_171.txt'
 
         self.config_save_file = 'config.pickle'
 
