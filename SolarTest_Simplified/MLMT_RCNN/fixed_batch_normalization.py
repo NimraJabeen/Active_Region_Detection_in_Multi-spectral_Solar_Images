@@ -4,7 +4,7 @@ from keras.layers import InputSpec
 from keras import initializers, regularizers
 from keras import backend as K
 
-#.........
+
 class FixedBatchNormalization(Layer):
 
     def __init__(self, epsilon=1e-3, axis=-1,
